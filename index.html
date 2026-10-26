@@ -8,7 +8,7 @@
 (function(){
   document.documentElement.classList.add('auth-gate');
   var returnTo=window.location.href;
-  var loginUrl='https://accounts.theegget.com/login?redirect_uri='+encodeURIComponent(returnTo);
+  var loginUrl='https://accounts.theegget.com/login?return_to='+encodeURIComponent(returnTo);
   window.location.replace(loginUrl);
 })();
 </script>
