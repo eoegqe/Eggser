@@ -6,9 +6,17 @@
 <style>html.auth-gate body{visibility:hidden!important}</style>
 <script>
 (function(){
-  document.documentElement.classList.add('auth-gate');
-  var returnTo=window.location.href;
-  var loginUrl='https://accounts.theegget.com/login?return_to='+encodeURIComponent(returnTo);
+  var params = new URLSearchParams(window.location.search);
+  if (params.get("tc_login_return") === "1") {
+    params.delete("tc_login_return");
+    var cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
+    window.history.replaceState({}, "", cleanUrl);
+    return;
+  }
+  document.documentElement.classList.add("auth-gate");
+  var returnTo = new URL(window.location.href);
+  returnTo.searchParams.set("tc_login_return", "1");
+  var loginUrl = "https://accounts.theegget.com/login?return_to=" + encodeURIComponent(returnTo.toString());
   window.location.replace(loginUrl);
 })();
 </script>
