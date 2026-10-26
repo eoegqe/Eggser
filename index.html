@@ -16,7 +16,7 @@
   document.documentElement.classList.add("auth-gate");
   var returnTo = new URL(window.location.href);
   returnTo.searchParams.set("tc_login_return", "1");
-  var loginUrl = "https://accounts.theegget.com/login?return_to=" + encodeURIComponent(returnTo.toString());
+  var loginUrl = "https://accounts.theegget.com/auth?return_to=" + encodeURIComponent(returnTo.toString());
   window.location.replace(loginUrl);
 })();
 </script>
