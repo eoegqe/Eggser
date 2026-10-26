@@ -1,33 +1,41 @@
 # Eggser Control Center
 
-A no-code-style, browser-based control panel prototype for Eggser (Bedrock), branded for Theegget Creations.
+A browser-based control panel for **Eggser (Bedrock)**, branded for Theegget Creations.
 
-## Current prototype
+## Live integrations
 
-Open `index.html` in a browser or enable GitHub Pages for this repository.
+The panel connects to the protected Cloudflare Worker at `https://eggser-api.theegget.com`.
 
-Included UI sections:
-- Server overview and power-control placeholders
-- Player list and search
-- Inventory slot editor (main inventory, hotbar, armor/offhand)
-- Ender Chest slot editor
-- Player map canvas with sample markers
-- Searchable no-code configuration controls
+- Live server status and online player names from Exaroton
+- Server start, stop, and restart requests
+- Live editable options exposed through Exaroton's `server.properties` configuration API
+- Kick commands sent to the server through Exaroton's command API
+- Search and filtering for live settings and online players
+
+Some setting changes require a server restart. Management requests require the `EGGSER_CONTROL_TOKEN` secret to be configured on the `eggser-api` Worker and the matching token to be entered in the panel. The Exaroton API token must remain a Worker secret and must never be placed in browser code.
+
+## Preview-only sections
+
+These sections are not yet connected to live world data:
+
+- Inventory editor
+- Ender Chest editor
+- Player map and coordinates
 - Item kit previews
-- Local activity log
+- Offline-player history and bans
 
-## Important status
+These areas use preview/sample data and do not modify the actual world.
 
-This is currently a **front-end prototype**. It uses sample data and local in-page state. It does not yet connect to Exaroton or modify a live Minecraft server. All controls explicitly indicate preview-only behavior.
+## API endpoints used by the panel
 
-## Integration needed for live management
+- `GET /server` — server status and player list
+- `POST /server/start`, `POST /server/stop`, `POST /server/restart` — power controls
+- `GET /world/settings` — read editable `server.properties` options
+- `POST /world/settings` — save validated server settings
+- `POST /players/kick` — kick an online player with a reason
 
-1. Add a server-side backend for Exaroton API calls. Store the Exaroton API token as a backend secret; never put it in browser JavaScript.
-2. Connect a compatible Bedrock server-side bridge/plugin/add-on for player data, inventory and Ender Chest access, commands, and live coordinates.
-3. Connect a world-map provider or generate a map from supported server-side world data.
-4. Add owner authentication and server-side authorization to every management endpoint before enabling destructive actions.
-5. Confirm which Exaroton-hosted Bedrock server software is being used, since inventory and map integration options depend on it.
+All management POST requests require `X-Eggser-Control-Token`. The Worker validates settings against the options returned by Exaroton and validates player names before issuing kick commands.
 
-## Hosting on GitHub Pages
+## Hosting
 
-In the repository settings, open **Pages**, choose the `main` branch and `/(root)`, then save. This serves the static preview only. GitHub Pages cannot securely store an Exaroton API token or run a private API backend.
+Open `index.html` in a browser or use GitHub Pages / the configured site deployment for the panel. Keep the Exaroton API token and control token in Cloudflare Worker secrets. GitHub Pages serves the front end only; it cannot securely store these secrets or run the API backend.
