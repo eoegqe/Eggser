@@ -1,6 +1,6 @@
 # Eggser Control Center
 
-A no-code-style, browser-based control panel prototype for Eggser (Minecraft Bedrock), branded for Theegget Creations.
+A no-code-style, browser-based control panel prototype for Eggser (Bedrock), branded for Theegget Creations.
 
 ## Current prototype
 
