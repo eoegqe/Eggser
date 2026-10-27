@@ -7,17 +7,86 @@
 <script>
 (function(){
   var params = new URLSearchParams(window.location.search);
-  if (params.get("tc_login_return") === "1") {
-    params.delete("tc_login_return");
-    var cleanUrl = window.location.pathname + (params.toString() ? "?" + params.toString() : "") + window.location.hash;
-    window.history.replaceState({}, "", cleanUrl);
+  var AUTH = "https://accounts.theegget.com";
+  var CLIENT_ID = "CONFIGURE_TC_OAUTH_CLIENT_ID";
+  var REDIRECT_URI = "https://panel-eggser.theegget.com/";
+  var gate = function(message){
+    document.documentElement.classList.add("auth-gate");
+    document.addEventListener("DOMContentLoaded", function(){
+      document.documentElement.classList.remove("auth-gate");
+      document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;color:#edf2fb;background:#121722;border:1px solid #273142;border-radius:16px;font:15px/1.6 system-ui"><h1>Sign in with TC</h1><p>' + message + '</p><p>After the TC OAuth client is registered, set its client ID in the Eggser panel configuration.</p></main>';
+    });
+  };
+  if (params.has("error")) {
+    gate("TC authorization was not completed: " + String(params.get("error")).replace(/[<>]/g,""));
+    return;
+  }
+  if (params.has("code")) {
+    document.documentElement.classList.add("auth-gate");
+    (async function(){
+      try {
+        var state = params.get("state") || "";
+        var savedState = sessionStorage.getItem("tc_oauth_state") || "";
+        var verifier = sessionStorage.getItem("tc_oauth_verifier") || "";
+        if (!state || !savedState || state !== savedState || !verifier) throw new Error("The sign-in session expired or could not be verified. Please try again.");
+        var body = new URLSearchParams({grant_type:"authorization_code",code:params.get("code"),client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,code_verifier:verifier});
+        var tokenResponse = await fetch(AUTH + "/oauth/token", {method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:body.toString()});
+        var token = await tokenResponse.json();
+        if (!tokenResponse.ok || !token.access_token) throw new Error(token.error_description || token.error || "TC token exchange failed.");
+        var profileResponse = await fetch(AUTH + "/oauth/userinfo", {headers:{Authorization:"Bearer " + token.access_token}});
+        var profile = await profileResponse.json();
+        if (!profileResponse.ok || !profile.sub || !profile.preferred_username) throw new Error("TC could not verify your account.");
+        sessionStorage.removeItem("tc_oauth_state");
+        sessionStorage.removeItem("tc_oauth_verifier");
+        sessionStorage.setItem("tc_oauth_profile", JSON.stringify({id:profile.sub,username:profile.preferred_username,email:profile.email || null,expires_at:Date.now() + (Number(token.expires_in)||3600)*1000}));
+        window.history.replaceState({}, "", REDIRECT_URI);
+        document.documentElement.classList.remove("auth-gate");
+        window.location.reload();
+      } catch (error) {
+        sessionStorage.removeItem("tc_oauth_state");
+        sessionStorage.removeItem("tc_oauth_verifier");
+        gate(String(error.message || "TC sign-in failed.").replace(/[<>]/g,""));
+      }
+    })();
+    return;
+  }
+  if (sessionStorage.getItem("tc_oauth_profile")) return;
+  if (CLIENT_ID === "CONFIGURE_TC_OAUTH_CLIENT_ID") {
+    gate("The TC OAuth authorization flow is now required, but this panel has not yet been assigned a registered TC OAuth client ID.");
     return;
   }
   document.documentElement.classList.add("auth-gate");
-  var returnTo = new URL(window.location.href);
-  returnTo.searchParams.set("tc_login_return", "1");
-  var loginUrl = "https://accounts.theegget.com/auth?return_to=" + encodeURIComponent(returnTo.toString());
-  window.location.replace(loginUrl);
+  (async function(){
+    try {
+      var random = function(size){
+        var bytes = new Uint8Array(size);
+        crypto.getRandomValues(bytes);
+        return Array.from(bytes, function(b){return b.toString(16).padStart(2,"0")}).join("");
+      };
+      var base64url = function(bytes){
+        var binary = "";
+        bytes.forEach(function(b){binary += String.fromCharCode(b)});
+        return btoa(binary).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/g,"");
+      };
+      var verifier = base64url(crypto.getRandomValues(new Uint8Array(32))) + base64url(crypto.getRandomValues(new Uint8Array(16)));
+      var digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+      var challenge = base64url(new Uint8Array(digest));
+      var state = random(32);
+      sessionStorage.setItem("tc_oauth_verifier", verifier);
+      sessionStorage.setItem("tc_oauth_state", state);
+      var authorize = new URL(AUTH + "/oauth/authorize");
+      authorize.searchParams.set("client_id", CLIENT_ID);
+      authorize.searchParams.set("redirect_uri", REDIRECT_URI);
+      authorize.searchParams.set("response_type", "code");
+      authorize.searchParams.set("scope", "profile email");
+      authorize.searchParams.set("state", state);
+      authorize.searchParams.set("code_challenge", challenge);
+      authorize.searchParams.set("code_challenge_method", "S256");
+      window.location.replace(authorize.toString());
+    } catch (error) {
+      gate("Could not start secure TC sign-in. Please use a supported browser and try again.");
+    }
+  })();
 })();
 </script>
 <style>
