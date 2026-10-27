@@ -8,16 +8,13 @@
 (function(){
   var params = new URLSearchParams(window.location.search);
   var AUTH = "https://accounts.theegget.com";
-  var CLIENT_ID = sessionStorage.getItem("eggser_tc_client_id") || "CONFIGURE_TC_OAUTH_CLIENT_ID";
+  var CLIENT_ID = "tc_WqinSr6DQEUQW2yyhoZn7fepzfkivI7z";
   var REDIRECT_URI = "https://panel-eggser.theegget.com/";
   var gate = function(message){
     document.documentElement.classList.add("auth-gate");
     var render = function(){
       document.documentElement.classList.remove("auth-gate");
-      var registerUrl = AUTH + "/auth?return_to=" + encodeURIComponent(REDIRECT_URI + "?tc_login_return=1");
-      document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;color:#edf2fb;background:#121722;border:1px solid #273142;border-radius:16px;font:15px/1.6 system-ui"><h1>Sign in with TC</h1><p>' + message + '</p><p><a href="' + registerUrl + '" style="display:inline-block;padding:12px 15px;border-radius:8px;background:#b7f36b;color:#10140b;font-weight:800;text-decoration:none">Register Eggser in TC Accounts ↗</a></p><p style="color:#8d9ab0;font-size:13px">TC Accounts will prefill Eggser Control Center and its redirect URL from this link. Register the app there, then return here and enter the client ID below.</p><form id="tcClientSetup" style="display:grid;gap:12px"><label for="tcClientId">TC OAuth client ID</label><input id="tcClientId" name="client_id" required autocomplete="off" placeholder="tc_…" style="padding:12px;border-radius:8px;border:1px solid #273142;background:#0b0e14;color:#edf2fb"><button style="padding:12px;border:0;border-radius:8px;background:#b7f36b;color:#10140b;font-weight:800;cursor:pointer">Save client ID and continue</button></form><p style="color:#8d9ab0;font-size:13px">Registered redirect URL: <code>https://panel-eggser.theegget.com/</code></p></main>';
-      var form=document.getElementById("tcClientSetup");
-      if(form)form.addEventListener("submit",function(event){event.preventDefault();var id=document.getElementById("tcClientId").value.trim();if(!/^tc_[A-Za-z0-9_-]+$/.test(id)){alert("That does not look like a TC OAuth client ID.");return;}sessionStorage.setItem("eggser_tc_client_id",id);window.location.replace(REDIRECT_URI);});
+      document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;color:#edf2fb;background:#121722;border:1px solid #273142;border-radius:16px;font:15px/1.6 system-ui"><h1>Sign in with TC</h1><p>' + message + '</p><p><a href="' + REDIRECT_URI + '" style="display:inline-block;padding:12px 15px;border-radius:8px;background:#b7f36b;color:#10140b;font-weight:800;text-decoration:none">Try again</a></p></main>';
     };
     if(document.readyState === "loading")document.addEventListener("DOMContentLoaded",render,{once:true});else render();
   };
@@ -73,10 +70,6 @@
       }
       sessionStorage.removeItem("tc_oauth_profile");
     } catch (_) { sessionStorage.removeItem("tc_oauth_profile"); }
-  }
-  if (CLIENT_ID === "CONFIGURE_TC_OAUTH_CLIENT_ID") {
-    gate("The TC OAuth authorization flow is now required, but this panel has not yet been assigned a registered TC OAuth client ID.");
-    return;
   }
   document.documentElement.classList.add("auth-gate");
   (async function(){
