@@ -12,10 +12,13 @@
   var REDIRECT_URI = "https://panel-eggser.theegget.com/";
   var gate = function(message){
     document.documentElement.classList.add("auth-gate");
-    document.addEventListener("DOMContentLoaded", function(){
+    var render = function(){
       document.documentElement.classList.remove("auth-gate");
-      document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;color:#edf2fb;background:#121722;border:1px solid #273142;border-radius:16px;font:15px/1.6 system-ui"><h1>Sign in with TC</h1><p>' + message + '</p><form id="tcClientSetup" style="display:grid;gap:12px"><label for="tcClientId">TC OAuth client ID</label><input id="tcClientId" required autocomplete="off" placeholder="tc_…" style="padding:12px;border-radius:8px;border:1px solid #273142;background:#0b0e14;color:#edf2fb"><button style="padding:12px;border:0;border-radius:8px;background:#b7f36b;color:#10140b;font-weight:800;cursor:pointer">Save client ID and continue</button></form><p style="color:#8d9ab0;font-size:13px">Register Eggser in TC Accounts with this exact redirect URL: <code>https://panel-eggser.theegget.com/</code></p></main>'; var form=document.getElementById("tcClientSetup"); if(form)form.addEventListener("submit",function(event){event.preventDefault();var id=document.getElementById("tcClientId").value.trim();if(!/^tc_[A-Za-z0-9_-]+$/.test(id)){alert("That does not look like a TC OAuth client ID.");return;}sessionStorage.setItem("eggser_tc_client_id",id);window.location.replace(REDIRECT_URI);});
-    });
+      document.body.innerHTML = '<main style="max-width:620px;margin:12vh auto;padding:28px;color:#edf2fb;background:#121722;border:1px solid #273142;border-radius:16px;font:15px/1.6 system-ui"><h1>Sign in with TC</h1><p>' + message + '</p><form id="tcClientSetup" style="display:grid;gap:12px"><label for="tcClientId">TC OAuth client ID</label><input id="tcClientId" required autocomplete="off" placeholder="tc_…" style="padding:12px;border-radius:8px;border:1px solid #273142;background:#0b0e14;color:#edf2fb"><button style="padding:12px;border:0;border-radius:8px;background:#b7f36b;color:#10140b;font-weight:800;cursor:pointer">Save client ID and continue</button></form><p style="color:#8d9ab0;font-size:13px">Register Eggser in TC Accounts with this exact redirect URL: <code>https://panel-eggser.theegget.com/</code></p></main>';
+      var form=document.getElementById("tcClientSetup");
+      if(form)form.addEventListener("submit",function(event){event.preventDefault();var id=document.getElementById("tcClientId").value.trim();if(!/^tc_[A-Za-z0-9_-]+$/.test(id)){alert("That does not look like a TC OAuth client ID.");return;}sessionStorage.setItem("eggser_tc_client_id",id);window.location.replace(REDIRECT_URI);});
+    };
+    if(document.readyState === "loading")document.addEventListener("DOMContentLoaded",render,{once:true});else render();
   };
   if (params.has("error")) {
     gate("TC authorization was not completed: " + String(params.get("error")).replace(/[<>]/g,""));
